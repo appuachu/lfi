@@ -75,6 +75,25 @@ def index():
 def login():
     error = request.args.get('error', '')
 
+    # Check if this is a direct browser access with LFI payload
+    # We'll hide LFI output for direct browser GET requests with LFI payloads
+    if request.method == 'GET' and error:
+        # Check User-Agent to see if it's a browser
+        user_agent = request.headers.get('User-Agent', '').lower()
+        is_browser = any(browser in user_agent for browser in
+                        ['mozilla', 'chrome', 'safari', 'firefox', 'edge', 'opera'])
+
+        # Check if error contains LFI patterns
+        has_lfi_pattern = any(pattern in error for pattern in
+                            ['../../../../', '/etc/', '/home/', '../'])
+
+        # If it's a browser directly accessing with LFI, show normal login page
+        if is_browser and has_lfi_pattern:
+            return render_template('login.html')
+
+    # Only process LFI if:
+    # 1. It's a POST request that failed (redirected with error)
+    # 2. OR it's a GET request without browser headers (Burp/curl/etc)
     if error:
         error_path = error.replace('/var/www/html/ctf/', '')
 
@@ -104,9 +123,12 @@ multip:x:1002:1002::/home/multip:/bin/bash""",
                     return render_template('login.html',
                         file_content="total 12\ndrwxr-x--- 2 achu achu 4096 Jan  1 00:00 .\ndrwxr-xr-x 4 root root 4096 Jan  1 00:00 ..\n-rw-r--r-- 1 achu achu   15 Jan  1 00:00 shell.txt\n-rw-r----- 1 root achu   50 Jan  1 00:00 flag.png\n-rw-r--r-- 1 achu achu  100 Jan  1 00:00 .bashrc",
                         filename='/home/achu/')
+        elif error == '/var/www/html/ctf/error.log':
+            # Normal failed login - show error message
+            return render_template('login.html', error_msg="Authentication failed")
         else:
-            return render_template('login.html',
-                error_msg=f"Error: {error}")
+            # Other errors
+            return render_template('login.html', error_msg=f"Error: {error}")
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -117,6 +139,7 @@ multip:x:1002:1002::/home/multip:/bin/bash""",
             session['current_dir'] = '/home/achu'
             return redirect(url_for('index'))
         else:
+            # Failed login - redirect with error
             return redirect(url_for('login', error='/var/www/html/ctf/error.log'))
 
     return render_template('login.html')
