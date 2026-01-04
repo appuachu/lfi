@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CTF Web App - Home</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            
+            <a href="/logout">Logout</a>
+        </nav>
+
+        <h1>CTF Web Application</h1>
+
+        {% if session.username %}
+            <div class="welcome">
+                <h2>Welcome, {{ session.username }}!</h2>
+                {% if session.username == 'achu' %}
+                    <div class="flag">
+                        <h3>🎉 Congratulations! 🎉</h3>
+                        <p>You found the flag: <strong>CTF{2026_ctf_red_t_222}</strong></p>
+                    </div>
+                {% else %}
+                    <p>You are logged in as a dummy user. Find the main flag!</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <p>Please <a href="/login">login</a> to continue.</p>
+        {% endif %}
+
+
+    </div>
+</body>
+</html>
