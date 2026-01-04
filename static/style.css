@@ -1,0 +1,274 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+nav {
+    background-color: #333;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+nav a {
+    color: #f0f0f0;
+    text-decoration: none;
+    margin-right: 15px;
+    padding: 5px 10px;
+    border-radius: 3px;
+}
+
+nav a:hover {
+    background-color: #555;
+}
+
+h1 {
+    color: #4CAF50;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #ccc;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.error {
+
+    color: white;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+}
+
+.file-content {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 3px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.file-content pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #1a1a1a;
+    padding: 10px;
+    border-radius: 3px;
+}
+
+.welcome {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.flag {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+.hint {
+    background-color: #333;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+    border-left: 4px solid #4CAF50;
+}
+
+.hint ol {
+    margin-left: 20px;
+}
+
+.hint li {
+    margin-bottom: 5px;
+}
+
+/* Terminal Styles */
+.terminal-wrapper {
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 2rem;
+    border: 1px solid #334155;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-header {
+    background: #1a1a1a;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+}
+
+.terminal-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #60a5fa;
+    font-family: monospace;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+}
+
+.clear-btn {
+    background: #475569;
+    color: #e2e8f0;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.clear-btn:hover {
+    background: #64748b;
+}
+
+.terminal-footer {
+    background: #1a1a1a;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid #334155;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.shortcuts {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+kbd {
+    background: #334155;
+    color: #e2e8f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    border: 1px solid #475569;
+}
+
+.welcome-message {
+    color: #86efac;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+/* Command prompt styling */
+.command-form {
+    display: flex;
+    flex: 1;
+    align-items: center;
+}
+
+.command-form input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    outline: none;
+    padding-left: 5px; /* Reduced from 10px */
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    gap: 0; /* Ensure no gap between elements */
+}
+
+.input-line .prompt {
+    color: #0ff;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.input-line .command {
+    color: #fff;
+    padding-left: 10px;
+}
+
+.output {
+    color: #86efac;
+    margin: 5px 0;
+    line-height: 1.4;
+    white-space: pre-wrap;
+}
+
+.error {
+    color: #f87171;
+}
+
+/* Scrollbar styling */
+.terminal-output::-webkit-scrollbar {
+    width: 10px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 5px;
+}
+
+.terminal-output::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
