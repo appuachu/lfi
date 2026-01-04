@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM ACCESS - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #00ff00;
+            overflow: hidden;
+        }
+
+        /* Matrix background effect */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            background: #000;
+        }
+
+        /* Terminal scan lines effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15) 0px,
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #00ff00;
+            border-radius: 0;
+            padding: 40px 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* CRT monitor effect */
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(0, 255, 0, 0.8),
+                rgba(0, 255, 0, 0.4),
+                rgba(0, 255, 0, 0.8),
+                transparent
+            );
+            animation: scanline 3s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { top: -10px; }
+            100% { top: 100%; }
+        }
+
+        .terminal-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .terminal-header h1 {
+            color: #00ff00;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .terminal-header h1::after {
+            content: '_';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .system-info {
+            color: #00aa00;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-top: 1px solid #003300;
+            border-bottom: 1px solid #003300;
+            padding: 10px 0;
+        }
+
+        .login-form {
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            color: #00aa00;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            background: #000;
+            border: 1px solid #003300;
+            color: #00ff00;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 40px;
+            color: #00aa00;
+            font-size: 16px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: #002200;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            background: #004400;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn::after {
+            content: '>';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .error-box {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #ff5555;
+            font-size: 13px;
+            animation: errorPulse 2s infinite;
+        }
+
+        @keyframes errorPulse {
+            0%, 100% { border-color: #ff0000; }
+            50% { border-color: #ff5555; }
+        }
+
+        .error-box h3 {
+            color: #ff0000;
+            margin-bottom: 5px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .file-viewer {
+            background: #000;
+            border: 1px solid #003300;
+            margin-top: 25px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .file-header {
+            background: #002200;
+            padding: 10px 15px;
+            border-bottom: 1px solid #003300;
+            color: #00aa00;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-content {
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .file-content pre {
+            color: #00ff00;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        /* Scrollbar styling */
+        .file-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .file-content::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .file-content::-webkit-scrollbar-thumb {
+            background: #003300;
+            border-radius: 0;
+        }
+
+        .file-content::-webkit-scrollbar-thumb:hover {
+            background: #00aa00;
+        }
+
+        .system-status {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #003300;
+            font-size: 11px;
+            color: #00aa00;
+            text-align: center;
+        }
+
+        .status-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .status-online::before {
+            content: '●';
+            color: #00ff00;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            background: #001100;
+            border: 1px solid #003300;
+            color: #00aa00;
+            text-align: center;
+            text-decoration: none;
+            font-size: 12px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #002200;
+            border-color: #00aa00;
+            color: #00ff00;
+        }
+
+        .nav-btn.active {
+            background: #003300;
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        /* Terminal blinking cursor effect for inputs */
+        .input-field:focus::after {
+            content: '_';
+            animation: blink 1s infinite;
+            color: #00ff00;
+            margin-left: 2px;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+            color: #00aa00;
+            font-size: 12px;
+        }
+
+        .loading::after {
+            content: '.';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixCanvas"></div>
+
+    <div class="login-container">
+        <div class="terminal-header">
+            <h1>SYSTEM ACCESS</h1>
+            <div class="system-info">
+                <span>Kali GNU/Linux Rolling | Kernel 5.10.0 | x86_64</span>
+            </div>
+        </div>
+
+        {% if error_msg %}
+        <div class="error-box">
+            <h3><i class="fas fa-exclamation-triangle"></i> ACCESS DENIED</h3>
+            <p>{{ error_msg }}</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" class="login-form">
+            <div class="input-group">
+                <label class="input-label" for="username">
+                    <i class="fas fa-user"></i> USERNAME
+                </label>
+                <i class="fas fa-terminal input-icon"></i>
+                <input type="text"
+                       id="username"
+                       name="username"
+                       class="input-field"
+                       placeholder="root"
+                       required
+                       autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       spellcheck="false">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="password">
+                    <i class="fas fa-key"></i> PASSWORD
+                </label>
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       class="input-field"
+                       placeholder="••••••••"
+                       required
+                       autocomplete="off">
+            </div>
+
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> AUTHENTICATE
+            </button>
+
+            <div class="loading" id="loadingIndicator">Authenticating</div>
+        </form>
+
+        {% if file_content %}
+        <div class="file-viewer">
+            <div class="file-header">
+                <span><i class="fas fa-file-code"></i> {{ filename }}</span>
+                <span>READ-ONLY</span>
+            </div>
+            <div class="file-content">
+                <pre>{{ file_content }}</pre>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="system-status">
+            <div class="status-line">
+                <span>SYSTEM STATUS:</span>
+                <span class="status-online">ONLINE</span>
+            </div>
+            <div class="status-line">
+                <span>LAST LOGIN:</span>
+                <span>Fri Jan 1 00:00:00 2024 from 127.0.0.1</span>
+            </div>
+            <div class="status-line">
+                <span>UPTIME:</span>
+                <span>30 days, 14:23:17</span>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="nav-btn"><i class="fas fa-home"></i> HOME</a>
+            <a href="/login" class="nav-btn active"><i class="fas fa-sign-in-alt"></i> LOGIN</a>
+            <a href="/terminal" class="nav-btn"><i class="fas fa-terminal"></i> TERMINAL</a>
+        </div>
+    </div>
+
+    <script>
+        // Matrix background effect
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const matrixBg = document.getElementById('matrixCanvas');
+        matrixBg.appendChild(canvas);
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = "01";
+        const charArray = chars.split("");
+        const fontSize = 12;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for(let x = 0; x < columns; x++) {
+            drops[x] = Math.floor(Math.random() * canvas.height / fontSize) * fontSize;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#00ff00";
+            ctx.font = `${fontSize}px monospace`;
+
+            for(let i = 0; i < drops.length; i++) {
+                const text = charArray[Math.floor(Math.random() * charArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        // Form submission loading indicator
+        document.querySelector('.login-form').addEventListener('submit', function(e) {
+            const loading = document.getElementById('loadingIndicator');
+            const submitBtn = this.querySelector('.login-btn');
+
+            submitBtn.style.display = 'none';
+            loading.style.display = 'block';
+
+            // If form takes too long, show button again
+            setTimeout(() => {
+                submitBtn.style.display = 'block';
+                loading.style.display = 'none';
+            }, 5000);
+        });
+
+        // Terminal-like input focus effect
+        const inputs = document.querySelectorAll('.input-field');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#00ff00';
+                this.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.3)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.borderColor = '#003300';
+                this.style.boxShadow = 'none';
+            });
+        });
+
+        // Auto-focus username field
+        document.getElementById('username').focus();
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Tab key navigation between inputs
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const inputs = document.querySelectorAll('.input-field');
+                const active = document.activeElement;
+                const index = Array.from(inputs).indexOf(active);
+
+                if (index > -1) {
+                    const nextIndex = (index + 1) % inputs.length;
+                    inputs[nextIndex].focus();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
