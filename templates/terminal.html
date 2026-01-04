@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Terminal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .terminal-output {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #0f0;
+            padding: 20px;
+            height: 70vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .prompt {
+            color: #0ff;
+            font-weight: bold;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .input-line input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+            padding-left: 10px;
+        }
+
+        .command {
+            color: #0ff;
+        }
+
+        .output {
+            color: #0f0;
+            margin: 5px 0;
+        }
+
+        .error {
+            color: #f00;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+
+
+        <main class="content">
+            <div class="terminal-wrapper">
+                <div class="terminal-header">
+                    <div class="terminal-info">
+                        <span class="status-indicator"></span>
+                        <span>Connected as: {{ session.get('username', 'guest') }}</span>
+                    </div>
+                    <button onclick="clearTerminal()" class="clear-btn">Clear</button>
+                </div>
+
+                <div class="terminal-output" id="terminalOutput">
+    <div class="welcome-message">
+Linux kali 5.10.0-kali7-amd64 #1 SMP Debian 5.10.28-1kali1 (2021-04-12) x86_64
+
+The programs included with the Kali GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Fri Jan  1 00:00:00 2024 from 127.0.0.1
+    </div>
+    <div id="commandHistory"></div>
+    <div class="input-line">
+        <span class="prompt">{{ session.get('username', 'user') }}@kali:~$</span>
+        <form id="commandForm" class="command-form">
+            <input type="text" id="commandInput" autocomplete="off" autofocus>
+        </form>
+    </div>
+</div>
+
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+const terminalOutput = document.getElementById('terminalOutput');
+const commandHistory = document.getElementById('commandHistory');
+const commandForm = document.getElementById('commandForm');
+const commandInput = document.getElementById('commandInput');
+
+let history = [];
+let index = 0;
+
+commandForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const cmd = commandInput.value.trim();
+    if (!cmd) return;
+
+    history.push(cmd);
+    index = history.length;
+
+    // show command
+    const line = document.createElement('div');
+    line.innerHTML = `<span class="prompt">${getPrompt()}$</span> <span class="command">${cmd}</span>`;
+    commandHistory.appendChild(line);
+
+    commandInput.value = '';
+
+    const res = await fetch('/execute', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'command=' + encodeURIComponent(cmd)
+    });
+
+    const text = await res.text();
+    if (text) {
+        const out = document.createElement('pre');
+        out.className = text.includes('Permission denied') ? 'error' : 'output';
+        out.textContent = text;
+        commandHistory.appendChild(out);
+    }
+
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+});
+
+commandInput.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' && index > 0) {
+        index--;
+        commandInput.value = history[index];
+    }
+    if (e.key === 'ArrowDown') {
+        index++;
+        commandInput.value = history[index] || '';
+    }
+});
+
+function getPrompt() {
+    return "{{ session.get('username','user') }}@kali";
+}
+</script>
+
+</body>
+</html>
