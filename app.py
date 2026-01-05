@@ -32,7 +32,7 @@ filesystem = {
     },
     '/home/achu': {
         'type': 'dir',
-        'contents': ['shell.txt', 'flag.png', '.bashrc'],
+        'contents': ['shell.txt', 'flag.png','flag.txt', '.bashrc'],
         'permissions': 'drwxr-x---'
     },
     '/home/admin': {
@@ -161,7 +161,7 @@ multip:x:1002:1002::/home/multip:/bin/bash""",
                 else:
                     print(f"DEBUG: Showing /home/achu directory")
                     return render_template('login.html',
-                        file_content="total 12\ndrwxr-x--- 2 achu achu 4096 Jan  1 00:00 .\ndrwxr-xr-x 4 root root 4096 Jan  1 00:00 ..\n-rw-r--r-- 1 achu achu   15 Jan  1 00:00 shell.txt\n-rw-r----- 1 root achu   50 Jan  1 00:00 flag.png\n-rw-r--r-- 1 achu achu  100 Jan  1 00:00 .bashrc",
+                        file_content="total 12\ndrwxr-x--- 2 achu achu 4096 Jan  1 00:00 .\ndrwxr-xr-x 4 root root 4096 Jan  1 00:00 ..\n-rw-r--r-- 1 achu achu   15 Jan  1 00:00 shell.txt\n-rw-r--r-- 1 achu achu   15 Jan  1 00:00 flag.txt\n-rw-r----- 1 root achu   50 Jan  1 00:00 flag.png\n-rw-r--r-- 1 achu achu  100 Jan  1 00:00 .bashrc",
                         filename='/home/achu/')
         elif 'error.log' in error or error == '/var/www/html/ctf/error.log':
             # Normal failed login - show error message
@@ -287,6 +287,12 @@ def execute_command():
                     response = f"Flag: {FLAG}\n"
                 else:
                     response = "cat: flag.png: Permission denied\n"
+            elif file_path == '/home/achu/flag.txt':
+                # Check if file has execute permission (simulating chmod +x effect)
+                if session.get('flag_txt_executable', False):
+                    response = "its not an actual flag\n"  # Or put a hint here
+                else:
+                    response = "cat: flag.txt: Permission denied\n"
             elif file_path == '/etc/passwd':
                 response = """root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
@@ -297,6 +303,30 @@ multip:x:1002:1002::/home/multip:/bin/bash\n"""
                 response = "cat: /etc/shadow: Permission denied\n"
             else:
                 response = f"cat: {args[0]}: No such file or directory\n"
+
+    elif command == 'chmod':
+        if len(args) < 2:
+            response = "chmod: missing operand\nTry 'chmod --help' for more information.\n"
+        else:
+            mode = args[0]
+            target = args[1]
+
+            if target == '*':
+                # Handle chmod +x *
+                if mode == '+x' or mode == '+X':
+                    # Mark flag.txt as executable in session
+                    session['flag_txt_executable'] = True
+                    response = ""
+                else:
+                    response = f"chmod: invalid mode: '{mode}'\n"
+            elif target == 'flag.txt' or target == './flag.txt' or target == '/home/achu/flag.txt':
+                if mode == '+x' or mode == '+X':
+                    session['flag_txt_executable'] = True
+                    response = ""
+                else:
+                    response = f"chmod: changing permissions of '{target}': Operation not permitted\n"
+            else:
+                response = f"chmod: cannot access '{target}': No such file or directory\n"
 
     elif command == 'sudo':
         if len(args) == 0:
@@ -330,6 +360,7 @@ multip:x:1002:1002::/home/multip:/bin/bash\n"""
   pwd            - print working directory
   cat [file]     - display file contents
   whoami         - display current user
+  chmod [mode] [file] - change file permissions
   sudo [command] - execute command as superuser
   clear          - clear terminal screen
   help           - show this help message\n"""
