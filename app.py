@@ -195,7 +195,6 @@ def terminal():
     return render_template('terminal.html')
 
 @app.route('/execute', methods=['POST'])
-@login_required
 def execute_command():
     cmd = request.form.get('command', '').strip()
     current_dir = get_current_dir()
