@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, make_response
 from functools import wraps
 import json
+import base64
+from urllib.parse import unquote
 
 app = Flask(__name__)
 app.secret_key = 'ctf_secret_key_2024'
@@ -65,6 +67,39 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def get_x_role_from_cookie():
+    """Get the decoded value of x-role from cookie"""
+    x_role_cookie = request.cookies.get('x-role', 'dXNlcg==')  # Default if missing
+
+    # URL decode if necessary
+    x_role_cookie = unquote(x_role_cookie)
+
+    try:
+        # Try to decode base64
+        decoded = base64.b64decode(x_role_cookie).decode('utf-8')
+        return decoded
+    except:
+        # If decoding fails, return default
+        return 'user'
+
+def is_admin_x_role():
+    """Check if x-role cookie contains base64 encoded 'admin'"""
+    decoded = get_x_role_from_cookie()
+    return decoded == 'admin'
+
+@app.before_request
+def set_default_cookie():
+    """Set default x-role cookie if not present"""
+    if 'x-role' not in request.cookies:
+        # Create a response that sets the cookie
+        @after_this_request
+        def set_cookie(response):
+            response.set_cookie('x-role', 'dXNlcg==')  # base64 of 'user'
+            return response
+
+# We need to import this
+from flask import after_this_request
+
 @app.route('/')
 def index():
     if 'username' in session:
@@ -75,32 +110,34 @@ def index():
 def login():
     error = request.args.get('error', '')
 
-    # Check if this is a direct browser access with LFI payload
-    # We'll hide LFI output for direct browser GET requests with LFI payloads
-    if request.method == 'GET' and error:
-        # Check User-Agent to see if it's a browser
-        user_agent = request.headers.get('User-Agent', '').lower()
-        is_browser = any(browser in user_agent for browser in
-                        ['mozilla', 'chrome', 'safari', 'firefox', 'edge', 'opera'])
+    # Get the x-role value from cookie
+    x_role_decoded = get_x_role_from_cookie()
+    print(f"DEBUG: x-role cookie value: {request.cookies.get('x-role')}")
+    print(f"DEBUG: x-role decoded: {x_role_decoded}")
 
-        # Check if error contains LFI patterns
-        has_lfi_pattern = any(pattern in error for pattern in
-                            ['../../../../', '/etc/', '/home/', '../'])
-
-        # If it's a browser directly accessing with LFI, show normal login page
-        if is_browser and has_lfi_pattern:
+    # Check if this is an LFI attempt
+    if error and any(pattern in error for pattern in ['../../../../', '/etc/', '/home/', '../']):
+        # For LFI, require x-role to be 'admin'
+        if not is_admin_x_role():
+            # Show normal login page without revealing LFI output
+            print(f"DEBUG: LFI blocked - x-role is {x_role_decoded}, need 'admin'")
             return render_template('login.html')
 
-    # Only process LFI if:
-    # 1. It's a POST request that failed (redirected with error)
-    # 2. OR it's a GET request without browser headers (Burp/curl/etc)
+    # Process error parameter
     if error:
-        error_path = error.replace('/var/www/html/ctf/', '')
+        # Clean up the error path
+        if '/var/www/html/ctf/' in error:
+            error_path = error.replace('/var/www/html/ctf/', '')
+        else:
+            error_path = error
+
+        print(f"DEBUG: Processing error path: {error_path}")
 
         if error_path.startswith('../../../../'):
             clean_path = error_path.replace('../../../../', '')
 
             if 'etc/passwd' in clean_path:
+                print(f"DEBUG: Showing /etc/passwd (admin access granted)")
                 return render_template('login.html',
                     file_content="""root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
@@ -110,26 +147,30 @@ multip:x:1002:1002::/home/multip:/bin/bash""",
                     filename='/etc/passwd')
 
             elif 'etc/shadow' in clean_path:
+                print(f"DEBUG: Showing /etc/shadow")
                 return render_template('login.html',
                     file_content="cat: /etc/shadow: Permission denied",
                     filename='/etc/shadow')
 
             elif 'home/achu' in clean_path:
                 if 'shell.txt' in clean_path:
+                    print(f"DEBUG: Showing shell.txt")
                     return render_template('login.html',
                         file_content="Try the terminal at /shell_terminal",
                         filename='/home/achu/shell.txt')
                 else:
+                    print(f"DEBUG: Showing /home/achu directory")
                     return render_template('login.html',
                         file_content="total 12\ndrwxr-x--- 2 achu achu 4096 Jan  1 00:00 .\ndrwxr-xr-x 4 root root 4096 Jan  1 00:00 ..\n-rw-r--r-- 1 achu achu   15 Jan  1 00:00 shell.txt\n-rw-r----- 1 root achu   50 Jan  1 00:00 flag.png\n-rw-r--r-- 1 achu achu  100 Jan  1 00:00 .bashrc",
                         filename='/home/achu/')
-        elif error == '/var/www/html/ctf/error.log':
+        elif 'error.log' in error or error == '/var/www/html/ctf/error.log':
             # Normal failed login - show error message
             return render_template('login.html', error_msg="Authentication failed")
         else:
             # Other errors
             return render_template('login.html', error_msg=f"Error: {error}")
 
+    # Handle POST request for login
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -142,14 +183,19 @@ multip:x:1002:1002::/home/multip:/bin/bash""",
             # Failed login - redirect with error
             return redirect(url_for('login', error='/var/www/html/ctf/error.log'))
 
-    return render_template('login.html')
+    # Normal GET request without error parameter
+    response = make_response(render_template('login.html'))
+    # Ensure cookie is set
+    if 'x-role' not in request.cookies:
+        response.set_cookie('x-role', 'dXNlcg==')
+    return response
 
 @app.route('/shell_terminal')
 def terminal():
     return render_template('terminal.html')
 
 @app.route('/execute', methods=['POST'])
-
+@login_required
 def execute_command():
     cmd = request.form.get('command', '').strip()
     current_dir = get_current_dir()
@@ -300,7 +346,10 @@ multip:x:1002:1002::/home/multip:/bin/bash\n"""
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    response = make_response(redirect(url_for('login')))
+    # Clear the x-role cookie on logout
+    response.set_cookie('x-role', '', expires=0)
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
