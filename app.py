@@ -16,7 +16,7 @@ users = {
 
 # Shadow hash for achu: password123
 
-FLAG = "CTF{Web_LFI_Sudo_Cat_Password_Crack}"
+FLAG = "xorion{!Q7Z$2M8@Kp#L9W0FxR}"
 
 # Simulated file system
 filesystem = {
